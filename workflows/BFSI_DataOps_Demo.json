@@ -1,0 +1,143 @@
+{
+  "OSC_Production_Data_Pipeline" : {
+    "Type" : "Folder",
+    "BusinessFields" : [ {
+      "Partner Code" : "OSC"
+    } ],
+    "ControlmServer" : "IN01",
+    "Description" : "Critical production data pipeline with visibility, dependencies, and controlled orchestration.",
+    "SiteStandard" : "OSC",
+    "SubApplication" : "Data_Operations",
+    "CreatedBy" : "luis.fileno@order.com.br",
+    "Application" : "Banking",
+    "When" : {
+      "RuleBasedCalendars" : {
+        "Included" : [ "EVERYDAY" ],
+        "EVERYDAY" : {
+          "Type" : "Calendar:RuleBased",
+          "When" : {
+            "DaysRelation" : "OR",
+            "WeekDays" : [ "NONE" ],
+            "MonthDays" : [ "ALL" ]
+          }
+        }
+      }
+    },
+    "OSC_Ingest_Data" : {
+      "Type" : "Job:Dummy",
+      "SubApplication" : "Data_Operations",
+      "CreatedBy" : "luis.fileno@order.com.br",
+      "RunAs" : "DUMMYUSR",
+      "Application" : "Banking",
+      "When" : {
+        "WeekDays" : [ "NONE" ],
+        "MonthDays" : [ "ALL" ],
+        "DaysRelation" : "OR"
+      },
+      "eventsToAdd" : {
+        "Type" : "AddEvents",
+        "Events" : [ {
+          "Event" : "OSC_Ingest_Data-TO-OSC_Validate_Data"
+        } ]
+      }
+    },
+    "OSC_Validate_Data" : {
+      "Type" : "Job:Dummy",
+      "SubApplication" : "Data_Operations",
+      "CreatedBy" : "luis.fileno@order.com.br",
+      "RunAs" : "DUMMYUSR",
+      "Application" : "Banking",
+      "When" : {
+        "WeekDays" : [ "NONE" ],
+        "MonthDays" : [ "ALL" ],
+        "DaysRelation" : "OR"
+      },
+      "eventsToWaitFor" : {
+        "Type" : "WaitForEvents",
+        "Events" : [ {
+          "Event" : "OSC_Ingest_Data-TO-OSC_Validate_Data"
+        } ]
+      },
+      "eventsToAdd" : {
+        "Type" : "AddEvents",
+        "Events" : [ {
+          "Event" : "OSC_Validate_Data-TO-OSC_Production_Data_Pipeline"
+        }, {
+          "Event" : "OSC_Validate_Data-TO-OSC_Transform_Data"
+        } ]
+      },
+      "eventsToDelete" : {
+        "Type" : "DeleteEvents",
+        "Events" : [ {
+          "Event" : "OSC_Ingest_Data-TO-OSC_Validate_Data"
+        } ]
+      }
+    },
+    "OSC_Transform_Data" : {
+      "Type" : "Job:Dummy",
+      "SubApplication" : "Data_Operations",
+      "CreatedBy" : "luis.fileno@order.com.br",
+      "RunAs" : "DUMMYUSR",
+      "Application" : "Banking",
+      "When" : {
+        "WeekDays" : [ "NONE" ],
+        "MonthDays" : [ "ALL" ],
+        "DaysRelation" : "OR"
+      },
+      "eventsToWaitFor" : {
+        "Type" : "WaitForEvents",
+        "Events" : [ {
+          "Event" : "OSC_Validate_Data-TO-OSC_Transform_Data"
+        } ]
+      },
+      "eventsToAdd" : {
+        "Type" : "AddEvents",
+        "Events" : [ {
+          "Event" : "OSC_Transform_Data-TO-OSC_Deliver_Reporting"
+        } ]
+      },
+      "eventsToDelete" : {
+        "Type" : "DeleteEvents",
+        "Events" : [ {
+          "Event" : "OSC_Validate_Data-TO-OSC_Transform_Data"
+        } ]
+      }
+    },
+    "OSC_Deliver_Reporting" : {
+      "Type" : "Job:Dummy",
+      "SubApplication" : "Data_Operations",
+      "CreatedBy" : "luis.fileno@order.com.br",
+      "RunAs" : "DUMMYUSR",
+      "Application" : "Banking",
+      "When" : {
+        "WeekDays" : [ "NONE" ],
+        "MonthDays" : [ "ALL" ],
+        "DaysRelation" : "OR"
+      },
+      "eventsToWaitFor" : {
+        "Type" : "WaitForEvents",
+        "Events" : [ {
+          "Event" : "OSC_Transform_Data-TO-OSC_Deliver_Reporting"
+        } ]
+      },
+      "eventsToDelete" : {
+        "Type" : "DeleteEvents",
+        "Events" : [ {
+          "Event" : "OSC_Transform_Data-TO-OSC_Deliver_Reporting"
+        } ]
+      }
+    },
+    "eventsToWaitFor" : {
+      "Type" : "WaitForEvents",
+      "Events" : [ {
+        "Event" : "OSC_Validate_Data-TO-OSC_Production_Data_Pipeline"
+      } ]
+    },
+    "eventsToDelete" : {
+      "Type" : "DeleteEvents",
+      "Events" : [ {
+        "Event" : "OSC_Validate_Data-TO-OSC_Production_Data_Pipeline"
+      } ]
+    }
+  }
+}
